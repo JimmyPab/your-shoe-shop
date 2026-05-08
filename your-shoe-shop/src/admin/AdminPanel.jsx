@@ -36,10 +36,16 @@ const STRIPE_LINK = 'https://buy.stripe.com/test_8x2bJ07hF6PTbOu1iGdIA00'
 // Reads admin-saved products from localStorage.
 // If no admin products saved yet, seeds from base catalog so all products
 // are visible and editable in the admin panel right away.
+const ADMIN_CATALOG_VERSION = 'v3'
 function getProducts() {
+  // Clear stale cache on version change
+  if (ls.get('bt_catalog_version', null) !== ADMIN_CATALOG_VERSION) {
+    ls.set('bt_catalog_version', ADMIN_CATALOG_VERSION)
+    localStorage.removeItem('bt_admin_products')
+  }
   const saved = ls.get('bt_admin_products', null)
   if (saved) return saved
-  // First time: seed from products.js so existing items show up
+  // First time: seed from products.js
   const seeded = BASE_PRODUCTS.map(p => ({ ...p, quantity: p.quantity || 0, active: true }))
   ls.set('bt_admin_products', seeded)
   return seeded

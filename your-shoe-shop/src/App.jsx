@@ -11,9 +11,16 @@ const ls = {
 }
 
 // ── Live catalog: merges hardcoded products.js with admin-added products ──
-// When admin saves/edits a product it goes to localStorage 'bt_admin_products'.
-// This builds the single source of truth the whole store reads from.
+// Version key — bump this whenever products.js changes significantly
+// to force-clear old cached admin data that might conflict
+const CATALOG_VERSION = 'v3'
 function buildLiveCatalog() {
+  // Clear stale cache if version changed
+  if (ls.get('bt_catalog_version', null) !== CATALOG_VERSION) {
+    ls.set('bt_catalog_version', CATALOG_VERSION)
+    localStorage.removeItem('bt_admin_products')
+  }
+
   const adminProducts = ls.get('bt_admin_products', null)
   if (!adminProducts) return PRODUCTS
 
@@ -491,12 +498,7 @@ export default function App() {
                   <button className="qty-btn" onClick={() => setSelectedQty(q => q + 1)}>&#43;</button>
                 </div>
               </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--taupe)', display: 'block', marginBottom: '8px' }}>Colors</label>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {currentProduct.colors.map(c => <span key={c} style={{ fontSize: '13px', background: 'var(--surface)', padding: '5px 12px', borderRadius: '6px', border: '1px solid var(--border)', color: 'var(--charcoal)' }}>{c}</span>)}
-                </div>
-              </div>
+
               <div className="pd-actions">
                 <button className="pd-add-btn" onClick={() => addToCart(currentProduct.id, selectedQty, selectedSize)}>
                   Add to Cart &mdash; ${(currentProduct.price * selectedQty).toFixed(2)}

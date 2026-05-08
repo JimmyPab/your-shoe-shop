@@ -23,7 +23,7 @@ import { loadStripe } from '@stripe/stripe-js'
 
 // ── Your Stripe publishable key (safe to put in frontend) ───
 // Get it from: https://dashboard.stripe.com/test/apikeys
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TUSXCCgB0JifsjYrCJehkJ50wFBy59ra5erfkB3nmd1vDJqk0dthyKPIjqEGtYEtb6UYBtwms2AZMpAOHNRZmFr00yASpZjNZ'
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_KEY_HERE'
 
 // ── Map your product IDs to Stripe Price IDs ────────────────
 // For each product in products.js, create it in your Stripe dashboard
@@ -38,42 +38,12 @@ const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TUSXCCgB0JifsjYrCJehkJ50wFBy59ra5erfkB
 // For admin-added products: add a stripePriceId field when creating
 // the product in the admin panel (we added that field below)
 export const STRIPE_PRICE_IDS = {
-  // Base products from products.js — fill these in after creating them in Stripe
-  1:  'price_REPLACE_WITH_REAL_ID',  // Hoka Clifton 9         $135
-  2:  'price_REPLACE_WITH_REAL_ID',  // Hoka Bondi 8           $165
-  3:  'price_REPLACE_WITH_REAL_ID',  // Hoka Mach 6            $145
-  4:  'price_REPLACE_WITH_REAL_ID',  // Hoka Speedgoat 5       $155
-  5:  'price_REPLACE_WITH_REAL_ID',  // Hoka Arahi 7           $140
-  6:  'price_REPLACE_WITH_REAL_ID',  // Hoka Running Cap        $38
-  7:  'price_REPLACE_WITH_REAL_ID',  // Hoka Sport Duffel Bag   $65
-  8:  'price_REPLACE_WITH_REAL_ID',  // NB Fresh Foam 1080v13  $165
-  9:  'price_REPLACE_WITH_REAL_ID',  // NB 990v6               $185
-  10: 'price_REPLACE_WITH_REAL_ID',  // NB FuelCell SuperComp  $250
-  11: 'price_REPLACE_WITH_REAL_ID',  // NB Fresh Foam 860v14   $140
-  12: 'price_REPLACE_WITH_REAL_ID',  // NB Hierro v8 Trail     $135
-  13: 'price_REPLACE_WITH_REAL_ID',  // NB Athletics Cap        $32
-  14: 'price_REPLACE_WITH_REAL_ID',  // NB Running Belt         $28
-  15: 'price_REPLACE_WITH_REAL_ID',  // Asics Gel-Kayano 31    $160
-  16: 'price_REPLACE_WITH_REAL_ID',  // Asics Gel-Nimbus 26    $165
-  17: 'price_REPLACE_WITH_REAL_ID',  // Asics MetaSpeed Sky+   $250
-  18: 'price_REPLACE_WITH_REAL_ID',  // Asics Gel-Cumulus 26   $130
-  19: 'price_REPLACE_WITH_REAL_ID',  // Asics Gel-Trabuco 12   $120
-  20: 'price_REPLACE_WITH_REAL_ID',  // Asics Performance Hat   $36
-  21: 'price_REPLACE_WITH_REAL_ID',  // Asics Training Gear Bag $55
-  22: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Cloudmonster 2 $170
-  23: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Cloudflow 4   $140
-  24: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Cloud 5       $130
-  25: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Cloudultra 2  $180
-  26: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Cloudswift 3  $150
-  27: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Lightweight Cap $45
-  28: 'price_REPLACE_WITH_REAL_ID',  // On Cloud Running Vest   $80
-  29: 'price_REPLACE_WITH_REAL_ID',  // Brooks Ghost 16        $140
-  30: 'price_REPLACE_WITH_REAL_ID',  // Brooks Glycerin 21     $160
-  31: 'price_REPLACE_WITH_REAL_ID',  // Brooks Hyperion Max 2  $200
-  32: 'price_REPLACE_WITH_REAL_ID',  // Brooks Adrenaline GTS  $130
-  33: 'price_REPLACE_WITH_REAL_ID',  // Brooks Cascadia 17     $130
-  34: 'price_REPLACE_WITH_REAL_ID',  // Brooks Podium Hat       $30
-  35: 'price_1TUXhxCgB0JifsjYJyyAp3Yo',  // rEAL
+  // ── Real products ──
+  101: 'price_1TUu11CgB0JifsjY7uDcfJaL',  // Adidas Men's Supernova 2  $65
+  102: 'price_1TUu3dCgB0JifsjY9kmvIArD',  // Adidas Men's Racer TR23   $90
+
+  // ── Temporary placeholders — add Price IDs when you have real products ──
+  // Add more as you create real products in Stripe
 }
 
 let stripePromise = null

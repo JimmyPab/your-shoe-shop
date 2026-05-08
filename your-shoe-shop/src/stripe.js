@@ -23,7 +23,7 @@ import { loadStripe } from '@stripe/stripe-js'
 
 // ── Your Stripe publishable key (safe to put in frontend) ───
 // Get it from: https://dashboard.stripe.com/test/apikeys
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_KEY_HERE'
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TUSXCCgB0JifsjYrCJehkJ50wFBy59ra5erfkB3nmd1vDJqk0dthyKPIjqEGtYEtb6UYBtwms2AZMpAOHNRZmFr00yASpZjNZ'
 
 // ── Map your product IDs to Stripe Price IDs ────────────────
 // For each product in products.js, create it in your Stripe dashboard

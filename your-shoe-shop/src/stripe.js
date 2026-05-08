@@ -1,63 +1,27 @@
 // ============================================================
-// stripe.js — Dynamic Stripe Checkout
+// stripe.js — Frontend Stripe Checkout
 //
-// HOW THIS WORKS:
-// Instead of a static payment link (which only shows one product),
-// this builds a real Stripe Checkout Session with every item in
-// the customer's cart — correct products, quantities and prices.
-//
-// SETUP STEPS (one time):
-// 1. Run: npm install @stripe/stripe-js
-// 2. Go to https://dashboard.stripe.com/test/products
-// 3. For EACH product, create it in Stripe and copy its Price ID
-//    (looks like: price_1ABC123defGHI456)
-// 4. Paste each Price ID into STRIPE_PRICE_IDS below, matching by product id
-// 5. Replace YOUR_PUBLISHABLE_KEY with your real key from:
-//    https://dashboard.stripe.com/test/apikeys  (starts with pk_test_...)
-//
-// NOTE: This uses Stripe Checkout — Stripe hosts the payment page.
-// Your secret key NEVER touches the frontend. Only the publishable key is used here.
+// This calls our backend /api/create-checkout which uses
+// the Stripe SECRET key safely on the server to build a
+// real checkout session with ALL cart items.
 // ============================================================
 
-import { loadStripe } from '@stripe/stripe-js'
-
-// ── Your Stripe publishable key (safe to put in frontend) ───
-// Get it from: https://dashboard.stripe.com/test/apikeys
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TUSXCCgB0JifsjYrCJehkJ50wFBy59ra5erfkB3nmd1vDJqk0dthyKPIjqEGtYEtb6UYBtwms2AZMpAOHNRZmFr00yASpZjNZ'
-
-// ── Map your product IDs to Stripe Price IDs ────────────────
-// For each product in products.js, create it in your Stripe dashboard
-// and paste its Price ID here.
-//
-// To get a Price ID:
-// 1. Go to https://dashboard.stripe.com/test/products
-// 2. Click "Add product"
-// 3. Set name and price — Stripe generates a Price ID like price_1Abc...
-// 4. Copy that Price ID and paste it here next to the matching product id
-//
-// For admin-added products: add a stripePriceId field when creating
-// the product in the admin panel (we added that field below)
+// ── Stripe Price IDs ─────────────────────────────────────────
+// These are safe to have on the frontend — they're public IDs
+// Get them from: https://dashboard.stripe.com/test/products
+// Click a product → copy the price_1... ID under Pricing
 export const STRIPE_PRICE_IDS = {
-  // ── Real products ──
   101: 'price_1TUu11CgB0JifsjY7uDcfJaL',  // Adidas Men's Supernova 2  $65
   102: 'price_1TUu3dCgB0JifsjY9kmvIArD',  // Adidas Men's Racer TR23   $90
-
-  // ── Temporary placeholders — add Price IDs when you have real products ──
-  // Add more as you create real products in Stripe
+  // Add more here as you create products in Stripe
 }
 
-let stripePromise = null
-function getStripe() {
-  if (!stripePromise) stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY)
-  return stripePromise
-}
-
-// ── Main checkout function ───────────────────────────────────
-// Call this when customer clicks "Pay with Stripe"
-// cartItems = array of { id, qty, size } from your cart state
-// liveCatalog = the full product list from buildLiveCatalog()
-export async function redirectToStripeCheckout(cartItems, liveCatalog) {
-  // ── Build line items from cart ──
+// ── Main checkout function ────────────────────────────────────
+// cartItems   = array of { id, qty, size } from your cart state
+// liveCatalog = full product list from buildLiveCatalog()
+// userEmail   = logged-in user's email (optional, pre-fills Stripe form)
+export async function redirectToStripeCheckout(cartItems, liveCatalog, userEmail = null) {
+  // Build line items from cart
   const lineItems = []
   const missingPriceIds = []
 
@@ -65,54 +29,73 @@ export async function redirectToStripeCheckout(cartItems, liveCatalog) {
     const product = liveCatalog.find(p => p.id === cartItem.id)
     if (!product) continue
 
-    // Get the Stripe Price ID — check product first (admin-added),
-    // then fall back to the STRIPE_PRICE_IDS map
-    const stripePriceId = product.stripePriceId || STRIPE_PRICE_IDS[product.id]
+    // Get Price ID — check product object first, then the map above
+    const priceId = product.stripePriceId || STRIPE_PRICE_IDS[product.id]
 
-    if (!stripePriceId || stripePriceId.startsWith('price_REPLACE')) {
+    if (!priceId || priceId.includes('REPLACE') || priceId === '') {
       missingPriceIds.push(product.name)
       continue
     }
 
     lineItems.push({
-      price:    stripePriceId,
+      price:    priceId,
       quantity: cartItem.qty,
     })
   }
 
-  // ── Warn if any products are missing a Price ID ──
-  if (missingPriceIds.length > 0) {
-    const names = missingPriceIds.join(', ')
-    console.warn(`⚠️  Missing Stripe Price IDs for: ${names}`)
-    console.warn('Add these products to your Stripe Dashboard and update STRIPE_PRICE_IDS in stripe.js')
-
-    // If ALL items are missing — stop and show error
-    if (lineItems.length === 0) {
-      return {
-        success: false,
-        error: `Checkout unavailable: Stripe Price IDs not configured yet.\n\nPlease go to your Stripe Dashboard, create these products, and add their Price IDs to src/stripe.js:\n\n${names}`,
-      }
+  // If no items have Price IDs set up yet
+  if (lineItems.length === 0) {
+    const names = missingPriceIds.length > 0
+      ? missingPriceIds.join(', ')
+      : 'items in cart'
+    return {
+      success: false,
+      error: `Checkout not available yet.\n\nThese products need Stripe Price IDs:\n${names}\n\nGo to dashboard.stripe.com → Products → copy the Price ID for each product and add it to src/stripe.js`,
     }
   }
 
-  // ── Redirect to Stripe Checkout ──
+  // Warn about items skipped due to missing Price IDs
+  if (missingPriceIds.length > 0) {
+    console.warn('Skipped items (no Price ID):', missingPriceIds.join(', '))
+  }
+
+  // Call our backend serverless function to create the Stripe session
   try {
-    const stripe = await getStripe()
-    const { error } = await stripe.redirectToCheckout({
-      lineItems,
-      mode: 'payment',
-      successUrl: `${window.location.origin}?checkout=success`,
-      cancelUrl:  `${window.location.origin}?checkout=cancel`,
+    const response = await fetch('/api/create-checkout', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lineItems,
+        customerEmail: userEmail,
+      }),
     })
 
-    if (error) {
-      console.error('Stripe error:', error)
-      return { success: false, error: error.message }
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Checkout API error:', data)
+      return {
+        success: false,
+        error: data.error || 'Checkout failed. Please try again.',
+      }
     }
 
+    if (!data.url) {
+      return {
+        success: false,
+        error: 'No checkout URL returned from server.',
+      }
+    }
+
+    // Redirect to Stripe Checkout page
+    window.location.href = data.url
     return { success: true }
+
   } catch (err) {
-    console.error('Stripe checkout failed:', err)
-    return { success: false, error: 'Failed to connect to Stripe. Please try again.' }
+    console.error('Failed to reach checkout API:', err)
+    return {
+      success: false,
+      error: 'Could not connect to checkout. Please check your internet connection and try again.',
+    }
   }
 }
